@@ -50,9 +50,12 @@ export async function attachRemote({ ssh, prefix = '', localPort = 0, serverId, 
   const sshExec = (remoteCmd) => new Promise((resolve, reject) => {
     const c = spawn(sshBin, [...sshOpts, sshHost, remoteCmd], { env: process.env });
     let out = '';
+    let err = '';
     c.stdout.on('data', (d) => { out += d; });
-    c.stderr.on('data', () => {});
-    c.on('exit', (code) => code === 0 ? resolve(out.trim()) : reject(new Error(`ssh "${remoteCmd}" failed (${code})`)));
+    c.stderr.on('data', (d) => { err += d; });
+    c.on('exit', (code) => code === 0
+      ? resolve(out.trim())
+      : reject(new Error(`ssh "${remoteCmd}" failed (${code}): ${err.trim() || 'no stderr'}`)));
     c.on('error', reject);
   });
 

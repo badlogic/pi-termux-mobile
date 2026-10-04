@@ -126,15 +126,43 @@ async function showSessions(sessions, attachFirst = false) {
   if (attachFirst && sessions.length) await attachSession(sessions[0].id);
 }
 
-btnConnect.addEventListener('click', async () => {
+let connecting = false;
+async function connectHost() {
   const target = hostSel.value;
-  if (!target) return;
-  el('msg sys', `connecting ${target}…`);
-  const r = await post(API.remoteConnect, { target });
-  if (!r.ok) { el('msg sys', `error: ${r.error}`); return; }
-  el('msg sys', `connected: ${r.serverId}`);
-  await showSessions(r.sessions?.sessions ?? [], true);
-});
+  if (!target || connecting) return;
+  connecting = true;
+  try {
+    // A connection is owned by one host. Do not leave the old host's attached
+    // session, model, transcript, or composer usable while switching hosts.
+    chat.innerHTML = '';
+    composer.classList.add('hidden');
+    modelSel.classList.add('hidden');
+    sessSel.innerHTML = '';
+    sessSel.classList.add('hidden');
+    btnNew.classList.add('hidden');
+    btnDelete.classList.add('hidden');
+    el('msg sys', `connecting ${target}…`);
+    const r = await post(API.remoteConnect, { target });
+    if (!r.ok) { el('msg sys', `error: ${r.error}`); return; }
+    el('msg sys', `connected: ${r.serverId}`);
+    let sessions = r.sessions?.sessions ?? [];
+    // A fresh host has no durable conversations yet. Create one immediately so
+    // Remote always opens a session belonging to the newly selected host.
+    if (!sessions.length) {
+      const created = await post(API.remoteCreate, {});
+      if (!created.id) { el('msg sys', `error: ${created.error || 'could not create session'}`); return; }
+      sessions = [{ id: created.id, cwd: 'new session' }];
+    }
+    await showSessions(sessions, true);
+  } finally {
+    connecting = false;
+  }
+}
+
+// Selecting a host connects through SSH and immediately fills the session
+// dropdown from that host. The button remains a manual refresh/reconnect.
+hostSel.addEventListener('change', connectHost);
+btnConnect.addEventListener('click', connectHost);
 
 sessSel.addEventListener('change', async () => {
   if (sessSel.value) await attachSession(sessSel.value);

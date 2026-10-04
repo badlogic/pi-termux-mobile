@@ -1,5 +1,9 @@
 # pi-termux-mobil
 
+> **Experimental software:** This is a personal prototype under active
+> development. Remote sessions, the embedded Termux runtime, and Android
+> background-process handling may still change or fail on individual devices.
+
 Minimal Android app that embeds Termux-built binaries (Node.js 26.4.0, bash,
 coreutils, git, ripgrep, fd, openssh, npm, util-linux `script`, …) plus a
 **pi-durable** harness (`@earendil-works/pi-durable` 1.0.2 + pi-ai/chord, with
@@ -24,7 +28,8 @@ and per-conversation execution environments — including remote hosts.
   (ed25519): generate, show pubkey, interactive `ssh-copy-id` in the
   terminal page.
 - **Remote** (`remote.html`) — attach to durable sessions on other machines
-  via the pi-server protocol (see below).
+  via the pi-server protocol: choose a saved SSH host, select/create/remove a
+  session, and choose that remote session's model (see below).
 - **pi CLI** (`terminal.html`) — real pi TUI over WebSocket → `script` PTY
   → `node cli.js`, with on-screen extra keys (esc/tab/ctrl/arrows/pgup/pgdn)
   for menus and scrollback. `?ssh=user@host` runs `ssh -tt <host> pi`
@@ -55,7 +60,18 @@ The phone bridge (`runtime/remote-client.mjs`) forwards the remote unix
 socket through the saved SSH client entry (`ssh -N -L port:~/.pi-serverd/server.sock`
 — OpenSSH 6.7+ unix→tcp forwarding; SSH is the auth, no extra token), then
 attaches via `@earendil-works/pi-client` with a small TCP
-`ByteTransportFactory`. Endpoints: `/api/remote/{connect,sessions,create,attach,prompt,abort,state,events,disconnect}`.
+`ByteTransportFactory`. `user@host:port` is converted to OpenSSH's `-p port`
+form. The Remote page opens the newest session first, restores its transcript,
+and displays a model picker using the remote host's available models.
+Endpoints: `/api/remote/{connect,sessions,models,model,create,delete,attach,prompt,abort,state,history,events,disconnect}`.
+
+Deleting a session removes its entry from `~/.pi-serverd/sessions.json`, so it
+no longer appears or can be attached through Remote. Its SQLite data is kept
+as a safety measure; it is not a destructive database purge. `pi-client` runs
+on the phone as the protocol client, while the durable harness, model calls,
+and tools run in `pi-serverd` on the remote host. For the full interactive Pi
+TUI instead, use **Clients → ▸_** or **pi CLI (ssh)**; run it in `tmux` when an
+SSH disconnect must not end the TUI process.
 
 ### 3. env-server (remote *tool execution*, different thing)
 
@@ -154,3 +170,7 @@ Caveats on device:
   PTY (control frames are `\x01`-prefixed JSON on the WS).
 
 See ANALYSE.md for the full evaluation and upstream facts.
+
+---
+
+*vibe coding fun with pi* — [Earendil Pi on GitHub](https://github.com/earendil-works/pi)
