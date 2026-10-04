@@ -1,5 +1,5 @@
 // env-server.mjs — dependency-free remote execution environment for
-// pi-termux-mobil. Run on any host with Node >= 22:
+// pi-termux-mobile. Run on any host with Node >= 22:
 //
 //   PI_REMOTE_TOKEN=<secret> PI_REMOTE_PORT=7842 node env-server.mjs
 //

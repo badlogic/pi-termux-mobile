@@ -1,4 +1,4 @@
-# pi-termux-mobil
+# pi-termux-mobile
 
 > **Experimental software:** This is a personal prototype under active
 > development. Remote sessions, the embedded Termux runtime, and Android

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# install-wifi.sh — pair (first time) + connect + install pi-termux-mobil APK
+# install-wifi.sh — pair (first time) + connect + install pi-termux-mobile APK
 # over wireless adb. Phone: Developer options -> Wireless debugging.
 #
 #   ./install-wifi.sh                 # auto-discover via mDNS, pair if needed

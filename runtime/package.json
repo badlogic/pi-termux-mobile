@@ -1,5 +1,5 @@
 {
-  "name": "pi-termux-mobil-runtime",
+  "name": "pi-termux-mobile-runtime",
   "private": true,
   "type": "module",
   "engines": {
