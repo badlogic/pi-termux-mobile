@@ -50,6 +50,14 @@ dialog select, dialog input {
   height: 28px;
   font-size: 12px;
 }
+#session-bar {
+  padding: 5px 12px;
+  background: #16161d;
+  border-bottom: 1px solid #2a2a35;
+  color: #9a9aa5;
+  font-size: 12px;
+}
+#session-name { color: #e4e4e8; }
 #connect-bar {
   display: flex;
   gap: 6px;

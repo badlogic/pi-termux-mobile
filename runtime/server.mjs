@@ -256,6 +256,7 @@ const server = http.createServer(async (req, res) => {
           busy: Boolean(snap?.run ?? view?.value?.live?.run ?? view?.value?.live),
           cwd: WORKDIR,
           sessionId: root?.id ?? null,
+          sessionName: localSessions.sessions[root?.id]?.name ?? 'Main',
           remotes: Object.keys(REMOTES),
         });
       }
@@ -273,7 +274,7 @@ const server = http.createServer(async (req, res) => {
         );
         localSessions.sessions[conversation.id] = {
           id: conversation.id,
-          name: String(body.name || 'New session'),
+          name: String(body.name || `Session ${conversation.id}`),
           created: new Date().toISOString(),
         };
         await saveLocalSessions();

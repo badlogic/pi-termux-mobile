@@ -6,6 +6,7 @@ const token = renderMenu();
 const chat = document.getElementById('chat');
 const input = document.getElementById('input');
 const statusEl = document.getElementById('status');
+const sessionNameEl = document.getElementById('session-name');
 
 let currentAssistant = null;
 
@@ -182,5 +183,8 @@ connect();
 refreshModels();
 fetch(`${API.state}?token=${encodeURIComponent(token)}`)
   .then((r) => r.json())
-  .then(() => status('idle'))
+  .then((state) => {
+    sessionNameEl.textContent = state.sessionName || 'Main';
+    status('idle');
+  })
   .catch(() => status('offline'));

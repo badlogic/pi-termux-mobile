@@ -115,7 +115,7 @@ async function showSessions(sessions, attachFirst = false) {
   for (const s of sessions) {
     const o = document.createElement('option');
     o.value = s.id;
-    o.textContent = `${s.id} (${s.cwd})`;
+    o.textContent = s.name ? `${s.name} (${s.cwd})` : `${s.id} (${s.cwd})`;
     sessSel.appendChild(o);
   }
   sessSel.classList.toggle('hidden', !sessions.length);

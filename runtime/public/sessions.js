@@ -9,6 +9,11 @@ const post = (path, body = {}) => fetch(path, {
   method: 'POST', headers: { 'content-type': 'application/json', 'x-token': token }, body: JSON.stringify(body),
 }).then((r) => r.json());
 
+document.getElementById('new-session').addEventListener('click', async () => {
+  const r = await post(API.sessionNew);
+  if (r.ok) location.href = q('/'); else msg.textContent = `error: ${r.error}`;
+});
+
 async function load() {
   const data = await fetch(q(API.sessions)).then((r) => r.json()).catch(() => ({ sessions: [] }));
   list.innerHTML = '';
@@ -21,15 +26,15 @@ async function load() {
     const hint = document.createElement('span');
     hint.className = 'key-hint';
     hint.textContent = session.id === data.activeId ? 'active' : session.id;
-    const select = document.createElement('button');
-    select.textContent = 'open';
-    select.disabled = session.id === data.activeId;
-    select.addEventListener('click', async () => {
-      const r = await post(API.sessionSelect, { id: session.id });
-      if (r.ok) location.href = q('/'); else msg.textContent = `error: ${r.error}`;
-    });
-    row.append(name, hint, select);
+    row.append(name, hint);
     if (session.id !== data.activeId) {
+      const select = document.createElement('button');
+      select.textContent = 'open';
+      select.addEventListener('click', async () => {
+        const r = await post(API.sessionSelect, { id: session.id });
+        if (r.ok) location.href = q('/'); else msg.textContent = `error: ${r.error}`;
+      });
+      row.append(select);
       const remove = document.createElement('button');
       remove.className = 'key-del';
       remove.textContent = '✕';
