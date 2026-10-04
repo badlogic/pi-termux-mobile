@@ -33,6 +33,7 @@ const AUTH_PATH = path.join(AGENT_DIR, 'auth.json');
 const STATE_DIR = path.join(HOME_DIR, '.pi-mobile');
 const PORT_FILE = path.join(STATE_DIR, 'port');
 const TOKEN_FILE = path.join(STATE_DIR, 'token');
+const SESSIONS_FILE = path.join(STATE_DIR, 'sessions.json');
 const PUBLIC = path.join(ROOT, 'public');
 const REMOTES = JSON.parse(process.env.PI_REMOTES || '{}');
 
@@ -105,6 +106,7 @@ const Subagent = defineExtension({
 let harness = null;
 let root = null;
 let eventStream = null;
+let localSessions = { sessions: {} };
 const sseClients = new Set();
 
 function broadcast(event) {
@@ -149,6 +151,21 @@ async function pickModel() {
 const models = createModels({ credentials: credentialStore });
 for (const p of builtinProviders()) models.setProvider(p);
 
+function readLocalSessions() {
+  try { return JSON.parse(readFileSync(SESSIONS_FILE, 'utf8')); } catch { return { sessions: {} }; }
+}
+async function saveLocalSessions() {
+  await mkdir(STATE_DIR, { recursive: true });
+  await writeFile(SESSIONS_FILE, JSON.stringify(localSessions, null, 2));
+}
+async function watchConversation(conversation) {
+  if (eventStream) { try { await eventStream.stop(); } catch {} }
+  root = conversation;
+  eventStream = await watchEvents(harness, root.id, ctx);
+  broadcast({ type: 'bridge_snapshot', snapshot: eventStream.snapshot });
+  eventStream.start(async (events) => { for (const e of events) broadcast(e); });
+}
+
 async function initHarness() {
   const registry = createRegistry();
   registry.install(CodingTools);
@@ -165,9 +182,12 @@ async function initHarness() {
       if (m) await root.configure({ model: m }, ctx);
     }
   } catch (e) { console.error('configure model:', e?.message || e); }
-  eventStream = await watchEvents(harness, root.id, ctx);
-  broadcast({ type: 'bridge_snapshot', snapshot: eventStream.snapshot });
-  eventStream.start(async (events) => { for (const e of events) broadcast(e); });
+  localSessions = readLocalSessions();
+  if (!localSessions.sessions[root.id]) {
+    localSessions.sessions[root.id] = { id: root.id, name: 'Main', created: new Date().toISOString() };
+    await saveLocalSessions();
+  }
+  await watchConversation(root);
   harness.resume();
 }
 
@@ -235,8 +255,46 @@ const server = http.createServer(async (req, res) => {
           model: snap?.agent?.model ?? view?.value?.agent?.model ?? null,
           busy: Boolean(snap?.run ?? view?.value?.live?.run ?? view?.value?.live),
           cwd: WORKDIR,
+          sessionId: root?.id ?? null,
           remotes: Object.keys(REMOTES),
         });
+      }
+      if (p === '/api/sessions' && req.method === 'GET') {
+        return json(res, 200, {
+          activeId: root?.id ?? null,
+          sessions: Object.values(localSessions.sessions)
+            .sort((a, b) => String(b.created ?? '').localeCompare(String(a.created ?? ''))),
+        });
+      }
+      if (p === '/api/sessions/new' && req.method === 'POST') {
+        if (!harness) await initHarness();
+        const conversation = await harness.createConversation(
+          { ownership: { kind: 'ownerless' }, agent: { model: await pickModel() } }, ctx,
+        );
+        localSessions.sessions[conversation.id] = {
+          id: conversation.id,
+          name: String(body.name || 'New session'),
+          created: new Date().toISOString(),
+        };
+        await saveLocalSessions();
+        await watchConversation(conversation);
+        return json(res, 200, { ok: true, activeId: conversation.id });
+      }
+      if (p === '/api/sessions/select' && req.method === 'POST') {
+        const id = String(body.id || '');
+        if (!localSessions.sessions[id]) return json(res, 404, { error: 'unknown session' });
+        const conversation = await harness.conversation(Number(id), ctx);
+        if (!conversation) return json(res, 404, { error: 'session unavailable' });
+        await watchConversation(conversation);
+        return json(res, 200, { ok: true, activeId: conversation.id });
+      }
+      if (p === '/api/sessions/delete' && req.method === 'POST') {
+        const id = String(body.id || '');
+        if (!localSessions.sessions[id]) return json(res, 404, { error: 'unknown session' });
+        if (id === String(root?.id)) return json(res, 400, { error: 'select another session first' });
+        delete localSessions.sessions[id];
+        await saveLocalSessions();
+        return json(res, 200, { ok: true });
       }
       if (p === '/api/prompt' && req.method === 'POST') {
         if (!root) await initHarness();

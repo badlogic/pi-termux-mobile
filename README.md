@@ -3,6 +3,8 @@
 > **Experimental software:** This is a personal prototype under active
 > development. Remote sessions, the embedded Termux runtime, and Android
 > background-process handling may still change or fail on individual devices.
+>
+> **Quick & dirty version 0.**
 
 Minimal Android app that embeds Termux-built binaries (Node.js 26.4.0, bash,
 coreutils, git, ripgrep, fd, openssh, npm, util-linux `script`, …) plus a

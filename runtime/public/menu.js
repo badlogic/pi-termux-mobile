@@ -28,6 +28,7 @@ export function renderMenu() {
   menu.innerHTML = `
     <a href="${q('/')}" data-pg="chat">Chat</a>
     <a href="${q('/keys.html')}" data-pg="keys">API keys</a>
+    <a href="${q('/sessions.html')}" data-pg="sessions">Sessions</a>
     <a href="${q('/clients.html')}" data-pg="clients">Clients</a>
     <a href="${q('/remote.html')}" data-pg="remote">Remote</a>
     <a href="${q('/terminal.html')}" data-pg="term">pi CLI</a>
@@ -55,10 +56,10 @@ export function renderMenu() {
     e.preventDefault();
     fetch(API.abort, { method: 'POST', headers: { 'x-token': token } });
   });
-  menu.querySelector('#menu-new').addEventListener('click', (e) => {
+  menu.querySelector('#menu-new').addEventListener('click', async (e) => {
     e.preventDefault();
-    fetch(API.newSession, { method: 'POST', headers: { 'x-token': token } });
-    if (page === 'chat') location.reload(); else location.href = q('/');
+    await fetch(API.sessionNew, { method: 'POST', headers: { 'x-token': token } });
+    location.href = q('/');
   });
   return token;
 }

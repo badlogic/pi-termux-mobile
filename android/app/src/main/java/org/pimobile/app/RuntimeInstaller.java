@@ -16,7 +16,7 @@ import java.io.OutputStream;
 final class RuntimeInstaller {
 
     static final String STAMP_NAME = ".runtime-version";
-    static final int RUNTIME_VERSION = 34;
+    static final int RUNTIME_VERSION = 35;
 
     private RuntimeInstaller() {}
 
