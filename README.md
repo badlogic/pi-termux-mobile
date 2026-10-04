@@ -26,6 +26,8 @@ and per-conversation execution environments — including remote hosts.
   model dropdown). `pi mobile` header links back here from every page.
 - **API keys** (`keys.html`) — provider key management (list/add/delete,
   stored as `~/.pi/agent/auth.json` in pi CLI format).
+- **Sessions** (`sessions.html`) — local durable-session browser: create a
+  session, reopen an earlier one, or remove it from the visible list.
 - **Clients** (`clients.html`) — remote SSH host registry + device keypair
   (ed25519): generate, show pubkey, interactive `ssh-copy-id` in the
   terminal page.
@@ -50,8 +52,9 @@ item *pi CLI (ssh)* does a one-off connect without saving a host.
 
 `runtime/pi-serverd.mjs` is a `pi-server` (`createUnixServer`) host app:
 durable Harness + own SQLite under `~/.pi-serverd/`, services
-`sessions.list/create/attach` and `chat.prompt/abort/state/configure/events`
-(events via long-poll cursor — Chord subscriptions deliberately skipped).
+`sessions.list/create/delete/attach/models` and
+`chat.prompt/abort/state/configure/history/events` (events via long-poll
+cursor — Chord subscriptions deliberately skipped).
 
 ```bash
 # on the remote machine (Node >= 22, same runtime dir, uses ~/.pi/agent/auth.json)
@@ -63,8 +66,11 @@ socket through the saved SSH client entry (`ssh -N -L port:~/.pi-serverd/server.
 — OpenSSH 6.7+ unix→tcp forwarding; SSH is the auth, no extra token), then
 attaches via `@earendil-works/pi-client` with a small TCP
 `ByteTransportFactory`. `user@host:port` is converted to OpenSSH's `-p port`
-form. The Remote page opens the newest session first, restores its transcript,
-and displays a model picker using the remote host's available models.
+form. The Remote page connects and loads sessions as soon as a host is
+selected, creates one automatically when the host has none, opens the newest
+session first, restores its transcript, and displays a model picker using the
+remote host's available models. Remote uses non-interactive SSH key login, so
+run **⇧key** / `ssh-copy-id` for a host before using it here.
 Endpoints: `/api/remote/{connect,sessions,models,model,create,delete,attach,prompt,abort,state,history,events,disconnect}`.
 
 Deleting a session removes its entry from `~/.pi-serverd/sessions.json`, so it
@@ -108,7 +114,7 @@ server executes arbitrary commands.
 ```bash
 cd android
 JAVA_HOME=<path-to>/tools/jdk21 ./gradlew assembleDebug
-# APK: app/build/outputs/apk/debug/app-debug.apk (~95 MB, aarch64 only content)
+# APK: app/build/outputs/apk/debug/app-debug.apk (~107 MB, aarch64 only content)
 ```
 
 Toolchain notes:
