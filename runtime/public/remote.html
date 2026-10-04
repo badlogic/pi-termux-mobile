@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>pi mobile — remote</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-page="remote">
+  <header>
+    <div id="menubar">
+      <select id="host-select" title="Host"><option value="">— host —</option></select>
+      <select id="session-select" title="Session" class="hidden"></select>
+    </div>
+  </header>
+  <div id="connect-bar">
+    <button id="btn-connect">connect</button>
+    <button id="btn-new-session" class="hidden">+ session</button>
+  </div>
+  <main id="chat"></main>
+  <form id="composer" class="hidden">
+    <textarea id="input" rows="2" placeholder="Prompt…" autocomplete="off"></textarea>
+    <button type="submit">➤</button>
+  </form>
+  <script type="module" src="remote.js"></script>
+</body>
+</html>

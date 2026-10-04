@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>pi mobile</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-page="chat">
+  <header>
+    <div id="menubar">
+      <span id="status">connecting…</span>
+      <select id="model-select" title="Model"><option value="">no model</option></select>
+    </div>
+  </header>
+  <main id="chat"></main>
+  <form id="composer">
+    <textarea id="input" rows="2" placeholder="Prompt…" autocomplete="off"></textarea>
+    <button type="submit">➤</button>
+  </form>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

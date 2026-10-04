@@ -1,0 +1,22 @@
+# Toolchain, SDK, Termux packages and extracted rootfs
+/tools/
+/debs/
+
+# Android / Gradle build artifacts
+/android/.gradle/
+/android/app/build/
+/android/app/src/main/assets/*.bin
+/android/local.properties
+/android/.idea/
+/android/*.iml
+
+# Node.js dependencies
+/runtime/node_modules/
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Logs and temp files
+*.log
+*.tmp

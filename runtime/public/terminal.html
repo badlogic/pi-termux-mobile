@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>pi cli</title>
+  <link rel="stylesheet" href="vendor/xterm.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="term-page" data-page="term">
+  <header>
+    <div id="menubar"><span id="status">pi cli</span></div>
+  </header>
+  <div id="term"></div>
+  <div id="keybar">
+    <button data-k="esc">esc</button>
+    <button data-k="tab">⇥</button>
+    <button data-k="ctrl">ctrl</button>
+    <button data-k="up">↑</button>
+    <button data-k="down">↓</button>
+    <button data-k="left">←</button>
+    <button data-k="right">→</button>
+    <button data-k="pgup">pg↑</button>
+    <button data-k="pgdn">pg↓</button>
+    <button data-k="slash">/</button>
+    <button data-k="enter">⏎</button>
+  </div>
+  <script src="vendor/xterm.js"></script>
+  <script src="vendor/addon-fit.js"></script>
+  <script type="module" src="terminal.js"></script>
+</body>
+</html>

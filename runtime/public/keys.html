@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>pi mobile — API keys</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-page="keys">
+  <header>
+    <div id="menubar"><span id="status">API keys</span></div>
+  </header>
+  <main id="keys-page">
+    <h2>Active keys</h2>
+    <div id="key-list"></div>
+    <h2>Add API key</h2>
+    <form id="add-form">
+      <select id="add-provider">
+        <option value="anthropic">anthropic</option>
+        <option value="openai">openai</option>
+        <option value="google">google</option>
+        <option value="openrouter">openrouter</option>
+        <option value="mistral">mistral</option>
+        <option value="groq">groq</option>
+        <option value="deepseek">deepseek</option>
+        <option value="xai">xai</option>
+        <option value="minimax">minimax</option>
+        <option value="zai">zai</option>
+      </select>
+      <input id="add-key" type="password" placeholder="API key" autocomplete="off" required>
+      <button type="submit" id="add-btn">+ api key hinzufügen</button>
+    </form>
+    <p id="msg"></p>
+  </main>
+  <script type="module" src="keys.js"></script>
+</body>
+</html>

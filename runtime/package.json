@@ -1,0 +1,19 @@
+{
+  "name": "pi-termux-mobil-runtime",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "dependencies": {
+    "@earendil-works/chord": "^1.0.1",
+    "@earendil-works/pi-ai": "^1.0.1",
+    "@earendil-works/pi-client": "^1.0.2",
+    "@earendil-works/pi-coding-agent": "^1.0.2",
+    "@earendil-works/pi-durable": "^1.0.2",
+    "@earendil-works/pi-server": "^1.0.2",
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/xterm": "^5.5.0",
+    "ws": "^8.18.3"
+  }
+}

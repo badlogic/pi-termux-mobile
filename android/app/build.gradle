@@ -1,0 +1,26 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'org.pimobile.app'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'org.pimobile.app'
+        minSdk 26
+        // targetSdk 28 keeps direct exec() of app-private binaries working
+        // (Android 10+ blocks exec in app home for targetSdk >= 29).
+        // Sideload/F-Droid only; Play requires a higher targetSdk.
+        targetSdk 28
+        versionCode 1
+        versionName '0.1.0'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+
+}

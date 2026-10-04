@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>pi mobile — clients</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-page="clients">
+  <header>
+    <div id="menubar"><span id="status">clients</span></div>
+  </header>
+  <main id="keys-page">
+    <h2>SSH key (this device)</h2>
+    <div id="sshkey-box">
+      <div id="sshkey-status">…</div>
+      <pre id="sshkey-pub" class="hidden"></pre>
+      <button id="sshkey-gen" class="hidden">generate key</button>
+    </div>
+    <h2>Remote hosts</h2>
+    <div id="client-list"></div>
+    <h2>Add client</h2>
+    <form id="add-form">
+      <input id="add-name" placeholder="name (optional)" autocomplete="off">
+      <input id="add-target" placeholder="user@host[:port]" autocomplete="off" required>
+      <button type="submit" id="add-btn">+ add client</button>
+    </form>
+    <p id="msg"></p>
+  </main>
+  <script type="module" src="clients.js"></script>
+</body>
+</html>
