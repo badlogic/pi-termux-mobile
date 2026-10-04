@@ -85,12 +85,15 @@ document.getElementById('add-form').addEventListener('submit', async (e) => {
   if (!target) return;
   const r = await post(API.clients, { name, target });
   const j = await r.json().catch(() => ({}));
-  msg.textContent = j.ok ? 'added' : `error: ${j.error || r.status}`;
-  if (j.ok) {
-    document.getElementById('add-name').value = '';
-    document.getElementById('add-target').value = '';
-    load();
-  }
+  if (!j.ok) { msg.textContent = `error: ${j.error || r.status}`; return; }
+  msg.textContent = 'added';
+  document.getElementById('add-name').value = '';
+  document.getElementById('add-target').value = '';
+  load();
+  // auto-flow: ensure a key exists, then open interactive ssh-copy-id
+  const k = await fetch(`${API.sshkey}?token=${encodeURIComponent(token)}`).then((x) => x.json());
+  if (!k.exists) await post(API.sshkey, {});
+  location.href = `/terminal.html?token=${encodeURIComponent(token)}&ssh=${encodeURIComponent(target)}&sshop=copyid`;
 });
 
 loadKey();

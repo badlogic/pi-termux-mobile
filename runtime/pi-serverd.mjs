@@ -54,18 +54,24 @@ const AUTH_PATH = `${HOME}/.pi/agent/auth.json`;
 const readAuthFile = () => {
   try { return JSON.parse(readFileSync(AUTH_PATH, 'utf8')); } catch { return {}; }
 };
+// pi-ai uses the CredentialStore read/list/modify interface. The earlier
+// get()-only adapter made every stored API key invisible, leaving sessions
+// without a model and able to do little beyond the protocol handshake.
 const credentialStore = {
-  async get(provider) { return readAuthFile()[provider] ?? null; },
-  async modify(provider, fn) {
+  read: async (providerId) => readAuthFile()[providerId],
+  list: async () => Object.entries(readAuthFile()).map(([providerId, c]) => ({ providerId, type: c?.type })),
+  modify: async (providerId, fn) => {
     const auth = readAuthFile();
-    auth[provider] = await fn(auth[provider]);
+    const next = await fn(auth[providerId]);
+    if (next === undefined) delete auth[providerId]; else auth[providerId] = next;
     await mkdir(path.dirname(AUTH_PATH), { recursive: true });
     writeFileSync(AUTH_PATH, JSON.stringify(auth, null, 2), { mode: 0o600 });
-    return auth[provider];
+    return next;
   },
-  async delete(provider) {
+  delete: async (providerId) => {
     const auth = readAuthFile();
-    delete auth[provider];
+    delete auth[providerId];
+    await mkdir(path.dirname(AUTH_PATH), { recursive: true });
     writeFileSync(AUTH_PATH, JSON.stringify(auth, null, 2), { mode: 0o600 });
   },
 };
@@ -115,6 +121,11 @@ function routedSession(conversationId) {
   return {
     async attachClient() {
       const conv = await harness.conversation(conversationId, ctx);
+      // Sessions created before a usable credential/model was available are
+      // retained durably. Give those legacy sessions the current default when
+      // they are attached instead of leaving submitted prompts unprocessable.
+      const view = await conv.viewState(ctx);
+      if (!view?.value?.agent?.model && defaultModel) await conv.configure({ model: defaultModel }, ctx);
       const buf = await bufferFor(conversationId);
       return {
         async invokeService(call, publish, context) {
@@ -139,6 +150,12 @@ function routedSession(conversationId) {
             }
             case 'snapshot':
               return { snapshot: buf.snapshot };
+            case 'history': {
+              // entries() is newest-first; the UI needs chronological messages.
+              const limit = Math.min(Math.max(Number(call.args[0]?.limit) || 200, 1), 500);
+              const page = await conv.entries({}, limit, undefined, context ?? ctx);
+              return { entries: [...page.items].reverse() };
+            }
             case 'events': {
               // long-poll: wait for events newer than cursor (max ~25s)
               const after = Number(call.args[0]?.cursor ?? -1);
@@ -172,7 +189,17 @@ const host = {
           if (call.serviceId !== 'sessions') throw new Error(`unknown service: ${call.serviceId}`);
           switch (call.member) {
             case 'list':
-              return { sessions: Object.entries(manifest.sessions).map(([id, s]) => ({ id, ...s })) };
+              // Newest first: a stale/test conversation must not become the
+              // implicit session just because it was created first.
+              return {
+                sessions: Object.entries(manifest.sessions)
+                  .map(([id, s]) => ({ id, ...s }))
+                  .sort((a, b) => String(b.created ?? '').localeCompare(String(a.created ?? ''))),
+              };
+            case 'models': {
+              const available = await models.getAvailable();
+              return { models: available.map((m) => ({ provider: m.provider, modelId: m.id })) };
+            }
             case 'create': {
               const conv = await harness.createConversation(
                 { ownership: { kind: 'ownerless' }, agent: { model: defaultModel } },
@@ -186,6 +213,15 @@ const host = {
               };
               saveManifest();
               return { id: conv.id };
+            }
+            case 'delete': {
+              const id = String(call.args[0]);
+              if (!manifest.sessions[id]) throw new SessionNotFoundError(`unknown session: ${id}`);
+              // The durable SQLite record is retained for safety; removing the
+              // manifest entry makes this session inaccessible to Remote.
+              delete manifest.sessions[id];
+              saveManifest();
+              return { ok: true };
             }
             case 'attach': {
               const id = String(call.args[0]);

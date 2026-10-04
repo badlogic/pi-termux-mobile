@@ -9,13 +9,15 @@
 <body data-page="remote">
   <header>
     <div id="menubar">
-      <select id="host-select" title="Host"><option value="">— host —</option></select>
-      <select id="session-select" title="Session" class="hidden"></select>
+      <select id="model-select" title="Remote model" class="hidden"></select>
     </div>
   </header>
   <div id="connect-bar">
+    <select id="host-select" title="Host"><option value="">— host —</option></select>
+    <select id="session-select" title="Session" class="hidden"></select>
     <button id="btn-connect">connect</button>
-    <button id="btn-new-session" class="hidden">+ session</button>
+    <button id="btn-new-session" class="hidden" title="New session">+</button>
+    <button id="btn-delete-session" class="hidden" title="Remove session">✕</button>
   </div>
   <main id="chat"></main>
   <form id="composer" class="hidden">

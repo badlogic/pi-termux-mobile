@@ -322,9 +322,24 @@ const server = http.createServer(async (req, res) => {
         if (!remoteState.remote) return json(res, 400, { error: 'not connected' });
         return json(res, 200, await remoteState.remote.list());
       }
+      if (p === '/api/remote/models' && req.method === 'GET') {
+        if (!remoteState.remote) return json(res, 400, { error: 'not connected' });
+        return json(res, 200, await remoteState.remote.models());
+      }
+      if (p === '/api/remote/model' && req.method === 'POST') {
+        if (!remoteState.remote) return json(res, 400, { error: 'not connected' });
+        if (!body.provider || !body.modelId) return json(res, 400, { error: 'provider+modelId required' });
+        return json(res, 200, await remoteState.remote.request('configure', [{
+          model: { provider: String(body.provider), modelId: String(body.modelId) },
+        }]));
+      }
       if (p === '/api/remote/create' && req.method === 'POST') {
         if (!remoteState.remote) return json(res, 400, { error: 'not connected' });
         return json(res, 200, await remoteState.remote.create());
+      }
+      if (p === '/api/remote/delete' && req.method === 'POST') {
+        if (!remoteState.remote) return json(res, 400, { error: 'not connected' });
+        return json(res, 200, await remoteState.remote.delete(String(body.id)));
       }
       if (p === '/api/remote/attach' && req.method === 'POST') {
         if (!remoteState.remote) return json(res, 400, { error: 'not connected' });
@@ -343,6 +358,10 @@ const server = http.createServer(async (req, res) => {
       if (p === '/api/remote/state' && req.method === 'GET') {
         if (!remoteState.remote) return json(res, 400, { error: 'not connected' });
         return json(res, 200, await remoteState.remote.request('state', []));
+      }
+      if (p === '/api/remote/history' && req.method === 'GET') {
+        if (!remoteState.remote) return json(res, 400, { error: 'not connected' });
+        return json(res, 200, await remoteState.remote.request('history', [{ limit: 200 }]));
       }
       if (p === '/api/remote/events' && req.method === 'GET') {
         if (!remoteState.remote) return json(res, 400, { error: 'not connected' });
@@ -449,10 +468,10 @@ function startPty(ws, url) {
     const host = m ? m[1] : sshTarget;
     if (sshCmd === 'copyid') {
       // run ssh-copy-id inside the pty so password entry is interactive
-      inner = `stty cols ${cols} rows ${rows}; "${prefix}/bin/bash" "${prefix}/bin/ssh-copy-id" ${portFlag} -o "UserKnownHostsFile=$HOME/.ssh/known_hosts" "${host}"; echo; echo '[done — close or tap to exit]'; read -r _ 2>/dev/null`;
+      inner = `stty cols ${cols} rows ${rows}; "${prefix}/bin/bash" "${prefix}/bin/ssh-copy-id" -i "$HOME/.ssh/id_ed25519" ${portFlag} -o "UserKnownHostsFile=$HOME/.ssh/known_hosts" "${host}"; echo; echo '[done — close or tap to exit]'; read -r _ 2>/dev/null`;
     } else {
       // remote pi session over ssh (keys via $HOME/.ssh on this device)
-      inner = `stty cols ${cols} rows ${rows}; exec "${prefix}/bin/ssh" -tt ${portFlag} -o "StrictHostKeyChecking=accept-new" -o "UserKnownHostsFile=$HOME/.ssh/known_hosts" "${host}" pi`;
+      inner = `stty cols ${cols} rows ${rows}; exec "${prefix}/bin/ssh" -tt ${portFlag} -o "StrictHostKeyChecking=accept-new" -o "UserKnownHostsFile=$HOME/.ssh/known_hosts" -i "$HOME/.ssh/id_ed25519" "${host}" pi`;
     }
   } else {
     // -c runs under sh inside the pty: set size first, then replace with pi

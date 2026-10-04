@@ -50,6 +50,26 @@ dialog select, dialog input {
   height: 28px;
   font-size: 12px;
 }
+#connect-bar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 7px 8px;
+  background: #16161d;
+  border-bottom: 1px solid #2a2a35;
+  overflow-x: auto;
+}
+#connect-bar select {
+  min-width: 88px;
+  max-width: 32vw;
+  height: 30px;
+  background: #1a1a20;
+  color: #e4e4e8;
+  border: 1px solid #2a2a34;
+  border-radius: 6px;
+  font-size: 12px;
+}
+#connect-bar button { white-space: nowrap; padding: 6px 9px; }
 
 .term-page main { display: none; }
 #term { position: absolute; top: 40px; left: 0; right: 0; bottom: 0; padding: 4px; }
