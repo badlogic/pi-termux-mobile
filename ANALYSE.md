@@ -1,12 +1,18 @@
-# pi auf Android (Termux) — Analyse
+# pi-termux-mobile — Architektur- und Plattformanalyse
 
-Ziel: pi (coding agent, `@earendil-works/pi-coding-agent`, github.com/earendil-works/pi)
-auf Android laufen lassen — erst als Termux-Setup, perspektivisch als minimale eigene
-App (eingebettete Runtime + WebView/Browser-UI).
+Ziel: `@earendil-works/pi-coding-agent` auf Android als eigene, kleine App mit
+eingebetteter Termux-Runtime und WebView-UI betreiben.
 
-Stand: 2026-10-03. Lokal geprüft gegen `pi-coding-agent@0.85.1` (ecowitt `pi-sidecar`)
-und `@1.0.0` (XYONA `ai_agent` runtime). Upstream-Fakten aus termux-app,
-termux-packages, termux-exec-package und Android-Dokumentation (nur gelesen).
+**Stand: 2026-10-04.** Die in Abschnitt 4 beschriebene eigene App ist umgesetzt
+und als aarch64-Debug-APK testbar. Sie enthält Node.js 26.4.0, eine Termux-
+Rootfs, `pi-durable`/`pi-ai`/`pi-server`/`pi-client` 1.0.2 und
+`pi-coding-agent` 1.0.2. Lokal gibt es persistente, auswählbare Sessions;
+Remote-Sessions laufen über SSH + `pi-serverd`, einschließlich Modellwahl,
+Verlauf und Session-Verwaltung.
+
+Dieses Dokument bewahrt außerdem die ursprüngliche Recherche und offene
+Plattformrisiken. Abschnitte 1–2 sind technische Hintergrundfakten; Abschnitte
+3–7 sind Entscheidungs- und Architekturgeschichte, nicht mehr nur ein Plan.
 
 Legende: **[F]** = geprüft (Quelle angegeben), **[A]** = Annahme/zu verifizieren.
 
@@ -150,10 +156,12 @@ Kein separates `web-ui`-Package im Repo-Root gefunden.
 Aufwand: Stunden. Risiko: gering — offiziell dokumentierter Pfad.
 Nachteil: Termux-App bleibt die Shell; UX ist „Terminal + Browser-Tab".
 
-## 4. Weg B — minimale eigene App (empfohlener Zielzustand)
+## 4. Weg B — minimale eigene App (umgesetzte Basis)
 
-Kernidee: nur die benötigten Termux-*Binaries* einbetten, **nicht** die
-Termux-App forken (GPL, packageName-Kopplung).
+Dieser Weg ist die Basis von `pi-termux-mobile`: benötigte Termux-Binaries
+werden eingebettet, die Termux-App wird nicht geforkt (GPL- und
+PackageName-Kopplung). Die nachfolgende Beschreibung enthält weiterhin
+Entwurfsdetails und verbleibende Risiken.
 
 ### Kleinste tragfähige Architektur
 
@@ -281,19 +289,17 @@ Fernbedienung: wenn der pi-Server ohnehin in echter Termux-App läuft
 4. termux-exec unter fremdem Prefix: welche Rewrites per Env steuerbar
    vs. Compile-Time — eigenes kleines Build-Repo für termux-exec
    erwägen.
-5. pi 1.0.0 `EmptyResourceLoader`-API-Kompatibilität und ob
-   `pi --mode rpc` Extensions im Bundle lädt, die Write-Tools anbieten
-   (Security-Oberfläche der Bridge: gezielt Tools whitelisten).
+5. Upgrade-Pfad für die aktuell gebündelten 1.0.2-Pakete festlegen und bei
+   jedem Upgrade die Tool-/Extension-Oberfläche sowie die vorhandenen
+   Schreibrechte gezielt prüfen.
 6. WebView-Uploads/Downloads/IME-Feinschliff erst an Prototyp messbar.
 7. Phantom-Prozess-Verhalten auf Zielgerät(en) (Versionen variieren;
    „assertive" OEMs killen trotz WakeLock Aggressiver).
 8. Play-Policy zu bundled Executables: Ausliefern in APK ok; jedes
    Runtime-Nachladen von Executables ist policy-riskant ⇒ fest einkleben.
-9. pi-Version pin + Upgrade-Pfad (XYONA-Checklisten-Muster übernehmen;
-   pi-API `Context/TranscriptContext` änderte sich bereits zwischen
-   0.85→1.0).
+9. Remote-Session-Verhalten bei gleichzeitigen Clients, Tunnel-Abbruch und
+   Wiederverbindung auf echter Hardware weiter testen.
 10. Lizenztexte aller gebündelten .debs in App-Notices (GPL-Texte
     beilegen genügt; kein Copyleft-Effekt auf App-Code, solange keine
     GPL-Bibliothek gelinkt wird — termux-exec ist Apache-2.0, kein
     Problem).
-```
