@@ -1,0 +1,54 @@
+name: Build APK
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '26.4.0'
+          cache: npm
+          cache-dependency-path: runtime/package-lock.json
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Install Android SDK
+        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Package aarch64 Termux rootfs
+        run: python3 scripts/package-rootfs.py
+      - name: Install runtime dependencies without lifecycle scripts
+        working-directory: runtime
+        run: npm ci --omit=dev --omit=optional --ignore-scripts
+      - name: Package JavaScript runtime
+        working-directory: runtime
+        run: |
+          find node_modules -type d -name .bin -prune -exec rm -rf {} +
+          find node_modules -type l ! -exec test -e {} \; -delete
+          tar czf ../android/app/src/main/assets/runtime.bin --transform 's,^,runtime/,' \
+            server.mjs remote-env.mjs env-server.mjs pi-serverd.mjs remote-client.mjs \
+            package.json package-lock.json public node_modules
+      - name: Build installable debug APK
+        working-directory: android
+        run: bash ./gradlew --no-daemon assembleDebug
+      - name: Upload APK and package manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: pi-termux-mobile-debug-aarch64
+          path: |
+            android/app/build/outputs/apk/debug/app-debug.apk
+            android/app/src/main/assets/termux-packages.json
+          if-no-files-found: error
+          retention-days: 14

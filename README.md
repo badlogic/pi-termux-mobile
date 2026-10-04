@@ -109,6 +109,22 @@ server executes arbitrary commands.
   `rootfs.bin` (see below)
 - `tools/` — local toolchain (JDK 21, Android SDK, Gradle 8.10.2) — not committed
 
+## Download a CI-built APK
+
+On this fork, open **Actions → Build APK**, select a successful run, and
+download the **pi-termux-mobile-debug-aarch64** artifact. Unzip it and install
+`app-debug.apk` on an ARM64 Android phone (allow installs from that source).
+You can start a build with **Run workflow**; pushes to `master` also build.
+Artifacts expire after 14 days. These are debug builds, not production releases.
+
+CI creates both omitted runtime assets: Node dependencies are installed from
+`runtime/package-lock.json` without lifecycle scripts, and aarch64 Termux
+packages plus their dependencies are downloaded from the official repository,
+checked against its SHA-256 index, and extracted without maintainer scripts.
+The artifact includes a package version/checksum manifest. Termux packages track
+the current repository, so later builds may bundle newer binaries. Device
+startup and Android background behavior still need testing on a real phone.
+
 ## Build
 
 ```bash
