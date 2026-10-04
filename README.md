@@ -152,9 +152,11 @@ adb install android/app/build/outputs/apk/debug/app-debug.apk
 
 First launch extracts ~170 MB to app-private storage, then a foreground
 service starts `node runtime/server.mjs`. Open the app → API keys page to
-store a provider key, then prompt. Old state lives in
-`files/home/.pi-mobile/harness.sqlite` — nothing is lost on process death,
-but there is no session browser for the local conversation yet.
+store a provider key, then prompt. Local conversation state lives in
+`files/home/.pi-mobile/harness.sqlite` and survives process death. The
+**Sessions** page lists local sessions, opens an earlier session, creates a
+new one, or removes a session from the visible list; the session registry is
+stored in `files/home/.pi-mobile/sessions.json`.
 
 Caveats on device:
 
