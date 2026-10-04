@@ -70,17 +70,12 @@ mkdir -p ~/.pi/agent && pi
 (`--ignore-scripts` und `TERMUX_VERSION`-Erkennung zeigen: kein native-build-
 Pfad nötig.)
 
-**[F]** Referenz-Integrationen lokal:
+**[F]** Lokale Referenz-Integrationen:
 
 - `../ecowitt-nextjs15/pi-sidecar/server.mjs` — schlanker HTTP-Server, der
   `createAgentSession` **in-process** nutzt (kein Subprozess nötig).
-- `../XYONA/xyona-lab/runtime/ai_agent/` — gehärteter Sidecar: reproduzierbares
-  Packaging via `npm ci --omit=dev --omit=optional --ignore-scripts`,
-  ~5 900 Dateien / ~45,7 MB unpacked (linux-x64, inkl. Node-Binary),
-  `.d.ts/.map/.node/.ts/.wasm` sowie `.bin` aus Manifest ausgeschlossen,
-  `EmptyResourceLoader` kappt Extensions/Skills/MCP, `InMemoryCredentialStore`,
-  Prozess-Pinning (Node 22.23.1 / npm 10.9.8 / pi 1.0.0). Direkt als
-  Packaging-Blueprint für eine mobile Runtime nutzbar (`PACKAGING.md` lesen).
+- `../tile_compile/agent_service/` und `../tile_compile/packaging/` — lokale
+  Referenz für Agent-Service-Struktur, Lockfiles und Packaging-Abläufe.
 
 **[F]** pi-server/pi-client (Monorepo `packages/server`, `packages/client`):
 experimenteller lokaler Server, framed CBOR, Unix-Socket-Transport; Routing von
@@ -153,7 +148,6 @@ Kein separates `web-ui`-Package im Repo-Root gefunden.
    kein WebView zwingend nötig. **[A]** Auth-Token setzen, sonst liegt eine
    bash-fähige Agent-API ungeschützt auf localhost/LAN.
 
-Aufwand: Stunden. Risiko: gering — offiziell dokumentierter Pfad.
 Nachteil: Termux-App bleibt die Shell; UX ist „Terminal + Browser-Tab".
 
 ## 4. Weg B — minimale eigene App (umgesetzte Basis)
@@ -175,8 +169,9 @@ APK (pro ABI, oder AAB mit Splits)
 │   ├─ git             (optional, + libgit deps)
 │   └─ libtermux-exec.so  (Apache-2.0, LD_PRELOAD-Hook)
 ├─ assets/pi-runtime/  (node_modules prod-only, ~30–45 MB;
-│                      via XYONA package-runtime-Stil: npm ci --omit=dev
-│                      --omit=optional --ignore-scripts + Manifest/SHA256)
+│                      nach dem lokalen `tile_compile`-Packaging-Muster:
+│                      npm ci --omit=dev --omit=optional --ignore-scripts
+│                      + Manifest/SHA256)
 ├─ Java/Kotlin:
 │   ├─ ForegroundService (Notification + WakeLock)
 │   ├─ Bootstrap-Extraktor (assets → filesDir, chmod, first-run)
@@ -226,17 +221,6 @@ xterm.js/Fokus/IME und Hardware-Keyboard gesondert testen.
 cloudflared-Tunnel; bei LAN-Binding Token-Auth + optional TLS.
 Niemals unauthentifiziert an 0.0.0.0 binden — das bash-Tool ist RCE.
 
-### Aufwand / Risiko
-
-| Baustein | Aufwand | Risiko |
-|---|---|---|
-| node/bash/rg aus Termux-debs unter eigenem Prefix zum Laufen bringen (env, Shebangs, linker-Trick) | 2–5 d | mittel (Prefix-Fixierung, seltene Helfer-Skripte) |
-| pi node_modules prod-bundle (~45 MB) + Bridge-Server + WebView | 3–7 d | gering (SDK/RPC dokumentiert) |
-| ForegroundService, WakeLock, Boot, Phantom-Prozess-Hinweise | 1–3 d | mittel (OEM-Aggression, adb-Workaround nötig) |
-| Lizenz-/Notices-Bundle (MIT/BSD/Apache/GPL der Binaries) | 1 d | gering |
-| Play-taugliche Variante (targetSdk 35, 16KB, AAB, kein Runtime-Download) | 2–4 d | mittel-hoch (Exec-Trick fragiler, Policy-Review) |
-| Optional: eigene Node-NDK-Build statt Termux-deb | 5–15 d | hoch (V8/ICU-Build, Wartung) |
-
 ## 5. Weg C — termux-app forken
 
 - GPLv3-only ⇒ **gesamte App wird GPLv3** (inkl. Bridge/ eigenem Code).
@@ -262,9 +246,9 @@ Fernbedienung: wenn der pi-Server ohnehin in echter Termux-App läuft
   linker-Mechanismus als Vorlage.
 - Termux-`.deb`-Binaries für node+deps, bash, rg, git — ABI aarch64
   reicht für MVP (armeabi-v7a/x86_64 optional).
-- XYONA-`package-runtime.mjs`-Ansatz für das pi-Bundle (Lockfile,
-  `--omit=dev --omit=optional --ignore-scripts`, Hash-Manifest,
-  `EmptyResourceLoader`-Prinzip falls Extensions unerwünscht).
+- `tile_compile` als lokale Referenz für einen reproduzierbaren
+  Package-Workflow: Lockfile, `--omit=dev --omit=optional --ignore-scripts`
+  und Hash-Manifest.
 - pi `docs/termux.md`-Annahmen (`TERMUX_VERSION`, termux-api Clipboard).
 
 **Ersetzen/weg lassen:**
